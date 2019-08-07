@@ -55,6 +55,7 @@ class Board(object):
     self.score = np.sum(self.scores) / 2 - BOUNDS[size]
 
     self.skipped = set()
+    self.cached_scores = {}
 
     # self.all_pairs = list(zip((size*size)*((0, 0),), ((i, j) for i in range(size) for j in range(size))))[1:]
     self.all_pairs = list(itertools.combinations(((i, j) for i in range(size) for j in range(size)), 2))
@@ -113,6 +114,17 @@ class Board(object):
     peek_score = self.swap(a, b)
     self.swap(a, b)
     return peek_score
+
+  def cached_peek_swap(self, a, b):
+    self.swap_grid(a, b)
+    tupled_grid = tuple(itertools.chain(*self.grid))
+    self.swap_grid(a, b)
+
+    cached_score = self.cached_scores.get(tupled_grid, None)
+    if cached_score is None:
+      cached_score = self.peek_swap(a, b)
+      self.cached_scores[tupled_grid] = cached_score
+    return cached_score
 
   def peek_skipped(self, a, b):
     self.swap_grid(a, b)

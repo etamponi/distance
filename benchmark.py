@@ -22,8 +22,14 @@ def benchmark(size):
   assert(peek_score == initial_score)
 
   start = time()
-  peek_score = board.peek_swap((0, 0), (0, 1))
-  print("PEEK SWAP TIME:", time() - start)
+  peek_score = board.cached_peek_swap((0, 0), (0, 1))
+  print("CACHED PEEK SWAP TIME:", time() - start)
+  print("PEEKED SCORE:", peek_score)
+  assert(peek_score == initial_score)
+
+  start = time()
+  peek_score = board.cached_peek_swap((0, 0), (0, 1))
+  print("CACHED PEEK SWAP TIME:", time() - start)
   print("PEEKED SCORE:", peek_score)
   assert(peek_score == initial_score)
 
@@ -41,9 +47,10 @@ def benchmark(size):
 
   start = time()
   random.shuffle(board.all_pairs)
-  for pair in board.all_pairs:
-    board.peek_swap(*pair)
-  print("PEEK ALL SWAPS TIME:", time() - start)
+  for pair in board.all_pairs[:int(0.05*len(board.all_pairs))]:
+    board.peek_skipped(*pair)
+    board.cached_peek_swap(*pair)
+  print("PEEK 5% OF SWAPS TIME:", time() - start)
 
 if __name__ == "__main__":
   size = int(sys.argv[1])
