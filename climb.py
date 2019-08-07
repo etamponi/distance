@@ -33,7 +33,7 @@ def search(board, max_attempts_pct):
       if next_swap and attempt > max_attempts:
         break
 
-      peek_score = board.cached_peek_swap(*swap)
+      peek_score = board.peek_swap(*swap)
 
       if peek_score < next_score:
         next_swap = swap
