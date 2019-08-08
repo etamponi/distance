@@ -16,7 +16,6 @@ def search(board):
   increase = 0
   while True:
     if temp and temp < 1:
-      print("RESET!")
       temp = None
       init_steps = 0
       increase = 0
