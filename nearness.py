@@ -1,9 +1,6 @@
 import itertools
-import math
 import numpy as np
 import random
-import sys
-from datetime import datetime
 from time import time
 
 BOUNDS = [
@@ -89,7 +86,6 @@ class Board(object):
     self.reset_dists()
 
     self.skipped = set()
-    self.cached_scores = {}
     self.swap_count = 0
 
     self.all_pairs = list(itertools.combinations(((i, j) for i in range(size) for j in range(size)), 2))
@@ -109,6 +105,7 @@ class Board(object):
     return [[(i, j) for j in range(self.size)] for i in range(self.size)]
 
   def swap(self, a, b):
+    start = time()
     self.swap_grid(a, b)
 
     m = self.dists
@@ -144,6 +141,8 @@ class Board(object):
 
     self.swap_count += 1
 
+    self.swap_time = time() - start
+
     return self.score
 
   def swap_grid(self, a, b):
@@ -155,17 +154,6 @@ class Board(object):
     self.swap(a, b)
     return peek_score
 
-  def cached_peek_swap(self, a, b):
-    self.swap_grid(a, b)
-    tupled_grid = tuple(itertools.chain(*self.grid))
-    self.swap_grid(a, b)
-
-    cached_score = self.cached_scores.get(tupled_grid, None)
-    if cached_score is None:
-      cached_score = self.peek_swap(a, b)
-      self.cached_scores[tupled_grid] = cached_score
-    return cached_score
-
   def peek_skipped(self, a, b):
     self.swap_grid(a, b)
     skip = tuple(itertools.chain(*self.grid)) in self.skipped
@@ -175,9 +163,11 @@ class Board(object):
   def skip(self):
     self.skipped.add(tuple(itertools.chain(*self.grid)))
 
-  def shuffle(self, stuckness):
-    swaps = random.choices(self.all_pairs, k=min(stuckness, self.size * self.size))
-    for swap in swaps:
+  def shuffle(self, swap_num):
+    while swap_num > 0:
+      swap = random.choice(self.all_pairs)
+      if not self.peek_skipped(*swap):
+        swap_num -= 1
       self.swap(*swap)
     return self.score
 

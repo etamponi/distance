@@ -7,19 +7,14 @@ from time import time
 
 from nearness import Board
 
-def search(board):
+def search(board, absolute_min_score):
+  board.best_time = math.inf
   alpha = 0.9995
 
   temp = None
   init_steps = 0
   increase = 0
   while True:
-    if temp and temp < 1:
-      temp = None
-      init_steps = 0
-      increase = 0
-      board.reset_dists()
-
     random.shuffle(board.all_pairs)
     selected = None
     for swap in board.all_pairs:
@@ -46,21 +41,39 @@ def search(board):
 
     if temp:
       temp *= alpha
-    elif init_steps >= 100:
+    elif init_steps >= 1000:
       temp = - increase / (init_steps * math.log(0.5))
 
     if selected:
       board.swap(*selected)
-      board.skip()
     else:
       board.shuffle(1)
 
+    # If we did not select anything, then we exhausted all possible
+    # neighbors of the current state without finding a better state.
+    # So we are safe skipping this state now. Then we shuffle by one,
+    # which is a shortcut, as a random swap is the only way out from
+    # here anyway.
+    #
+    # If we did select something, and it's a minimum, we want to avoid
+    # switching back and forth from each of its neighbors and itself
+    # until the neighbors are over.
+    board.skip()
+
     if temp and board.score == board.min_score:
-      print(board)
-      print(board.score, "--", board.rel_score, "--", temp, "--", datetime.now())
-      print("")
+      if board.score < absolute_min_score:
+        print(board)
+        print(board.score, "--", board.rel_score, "--", temp, "--", datetime.now())
+        print("")
+        absolute_min_score = board.score
       board.save_dists()
       board.best_time = time()
+
+    # Let's say that it is reasonable to consider ourselves stuck if we didn't find
+    # any new better score within the time to do 30 "worst case steps"
+    # But wait at least 60 seconds
+    if time() - board.best_time > max(60, 30 * len(board.all_pairs) * board.swap_time):
+      return absolute_min_score
 
 if __name__ == "__main__":
   start = time()
@@ -71,8 +84,11 @@ if __name__ == "__main__":
 
     size = int(sys.argv[1])
 
-    board = Board(size)
-    search(board)
+    # Reset search
+    absolute_min_score = math.inf
+    while True:
+      board = Board(size)
+      absolute_min_score = search(board, absolute_min_score)
   except:
     print("")
     print("best found in:", int(board.best_time - start), "seconds")
