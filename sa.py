@@ -20,7 +20,7 @@ def search(board):
       temp = None
       init_steps = 0
       increase = 0
-      board.reset_score()
+      board.reset_dists()
 
     random.shuffle(board.all_pairs)
     selected = None
@@ -39,10 +39,6 @@ def search(board):
         increase += (peek_score - board.score)
         init_steps += 1
         selected = swap
-
-        if init_steps >= 1000:
-          temp = - increase / (init_steps * math.log(0.8))
-
         break
 
       pick_prob = math.exp(-(peek_score - board.score) / temp)
@@ -52,6 +48,8 @@ def search(board):
 
     if temp:
       temp *= alpha
+    elif init_steps >= 1000:
+      temp = - increase / (init_steps * math.log(0.5))
 
     board.skip()
     if not selected:
