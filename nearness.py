@@ -43,6 +43,41 @@ BOUNDS = [
   5_643_997_650,
 ]
 
+BEST_SCORES = [
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+
+  5526,
+  17779,
+  57152,
+  144459,
+  362950,
+  740798,
+  1585264,
+  2888120,
+  5457848,
+  9164700,
+  15891088,
+  25152826,
+  40901354,
+  61784724,
+  95128264,
+  138135156,
+  203903306,
+  286970392,
+  409184334,
+  560370076,
+  776307056,
+  1039513584,
+  1404896640,
+  1843448171,
+  2439470876,
+]
+
 class Board(object):
 
   def __init__(self, size):
@@ -50,14 +85,13 @@ class Board(object):
     self.orig = self.initial_distances()
     self.grid = self.initial_grid()
 
-    self.dists = np.array(self.orig)
-    self.scores = self.dists * self.orig
-    self.score = np.sum(self.scores) / 2 - BOUNDS[size]
+    self.min_dists = self.dists = np.array(self.orig)
+    self.reset_dists()
 
     self.skipped = set()
     self.cached_scores = {}
+    self.swap_count = 0
 
-    # self.all_pairs = list(zip((size*size)*((0, 0),), ((i, j) for i in range(size) for j in range(size))))[1:]
     self.all_pairs = list(itertools.combinations(((i, j) for i in range(size) for j in range(size)), 2))
 
   def initial_distances(self):
@@ -104,6 +138,11 @@ class Board(object):
     ])
 
     self.score = self.score / 2 - BOUNDS[self.size]
+    self.rel_score = round(BEST_SCORES[self.size] / self.score, 4)
+    if self.score < self.min_score:
+      self.min_score = self.score
+
+    self.swap_count += 1
 
     return self.score
 
@@ -111,6 +150,7 @@ class Board(object):
     self.grid[a[0]][a[1]], self.grid[b[0]][b[1]] = self.grid[b[0]][b[1]], self.grid[a[0]][a[1]]
 
   def peek_swap(self, a, b):
+    self.swap_count -= 2
     peek_score = self.swap(a, b)
     self.swap(a, b)
     return peek_score
@@ -139,6 +179,16 @@ class Board(object):
     swaps = random.choices(self.all_pairs, k=min(stuckness, self.size * self.size))
     for swap in swaps:
       self.swap(*swap)
+    return self.score
+
+  def save_dists(self):
+    self.min_dists = np.copy(self.dists)
+
+  def reset_dists(self):
+    self.dists = self.min_dists
+    self.scores = self.dists * self.orig
+    self.min_score = self.score = np.sum(self.scores) / 2 - BOUNDS[self.size]
+    self.rel_score = round(BEST_SCORES[self.size] / self.score, 4)
 
   def __repr__(self):
     return ",\n".join(["({})".format(", ".join([self.cell_repr(cell) for cell in row])) for row in self.grid])

@@ -47,10 +47,10 @@ def benchmark(size):
 
   start = time()
   random.shuffle(board.all_pairs)
-  for pair in board.all_pairs[:int(0.05*len(board.all_pairs))]:
+  for pair in board.all_pairs[:min(len(board.all_pairs), 53000)]:
     board.peek_skipped(*pair)
     board.cached_peek_swap(*pair)
-  print("PEEK 5% OF SWAPS TIME:", time() - start)
+  print("PEEK UP TO 53000 SWAPS TIME:", time() - start)
 
 if __name__ == "__main__":
   size = int(sys.argv[1])
