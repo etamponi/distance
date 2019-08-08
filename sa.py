@@ -8,7 +8,6 @@ from time import time
 from nearness import Board
 
 def search(board):
-
   alpha = 0.9995
 
   temp = None
@@ -47,14 +46,14 @@ def search(board):
 
     if temp:
       temp *= alpha
-    elif init_steps >= 1000:
+    elif init_steps >= 100:
       temp = - increase / (init_steps * math.log(0.5))
 
-    board.skip()
-    if not selected:
-      board.shuffle(1)
-    else:
+    if selected:
       board.swap(*selected)
+      board.skip()
+    else:
+      board.shuffle(1)
 
     if temp and board.score == board.min_score:
       print(board)

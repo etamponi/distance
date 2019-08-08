@@ -185,7 +185,7 @@ class Board(object):
     self.min_dists = np.copy(self.dists)
 
   def reset_dists(self):
-    self.dists = self.min_dists
+    self.dists = np.copy(self.min_dists)
     self.scores = self.dists * self.orig
     self.min_score = self.score = np.sum(self.scores) / 2 - BOUNDS[self.size]
     self.rel_score = round(BEST_SCORES[self.size] / self.score, 4)
