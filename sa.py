@@ -16,6 +16,8 @@ def search(board):
   init_steps = 0
   increase = 0
   best_time = math.inf
+  board.min_score = math.inf
+  stuckness = 1
   while True:
     random.shuffle(board.all_pairs)
     selected = None
@@ -63,14 +65,15 @@ def search(board):
         print(datetime.now(), board.score, "--", board.rel_score, "-- temp =", round(temp, 2), "-- time =", round(best_time - start, 2))
 
     # Let's say that it is reasonable to consider ourselves stuck if we didn't find
-    # any new better score within the time to do 30 "worst case steps".
+    # any new better score within the time to do stuckness * 20 "worst case steps".
     # But wait at least 10 seconds.
-    if time() - best_time > max(10, 30 * len(board.all_pairs) * board.swap_time):
+    if time() - best_time > max(10, stuckness * 20 * len(board.all_pairs) * board.swap_time):
       temp = None
       init_steps = 0
       increase = 0
       best_time = math.inf
       board.min_score = math.inf
+      stuckness += 1
 
 if __name__ == "__main__":
   try:
