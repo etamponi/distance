@@ -66,6 +66,7 @@ def search(board):
       temp = None
       init_steps = 0
       increase = 0
+      board.skipped = set()
       best_time = math.inf
 
 if __name__ == "__main__":
