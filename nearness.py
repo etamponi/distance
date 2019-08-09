@@ -83,7 +83,9 @@ class Board(object):
     self.grid = self.initial_grid()
 
     self.min_dists = self.dists = np.array(self.orig)
-    self.reset_dists()
+    self.scores = self.dists * self.orig
+    self.min_score = self.score = np.sum(self.scores) / 2 - BOUNDS[self.size]
+    self.rel_score = round(BEST_SCORES[self.size] / self.score, 4)
 
     self.skipped = set()
     self.swap_count = 0
@@ -170,15 +172,6 @@ class Board(object):
         swap_num -= 1
       self.swap(*swap)
     return self.score
-
-  def save_dists(self):
-    self.min_dists = np.copy(self.dists)
-
-  def reset_dists(self):
-    self.dists = np.copy(self.min_dists)
-    self.scores = self.dists * self.orig
-    self.min_score = self.score = np.sum(self.scores) / 2 - BOUNDS[self.size]
-    self.rel_score = round(BEST_SCORES[self.size] / self.score, 4)
 
   def __repr__(self):
     return ",\n".join(["({})".format(", ".join([self.cell_repr(cell) for cell in row])) for row in self.grid])

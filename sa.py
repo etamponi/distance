@@ -47,18 +47,13 @@ def search(board, absolute_min_score):
     if selected:
       board.swap(*selected)
     else:
+      # If we did not select anything, then we exhausted all possible
+      # neighbors of the current state without finding a better state.
+      # So we are safe skipping this state now. Then we shuffle by one,
+      # which is a shortcut, as a random swap is the only way out from
+      # here anyway.
+      board.skip()
       board.shuffle(1)
-
-    # If we did not select anything, then we exhausted all possible
-    # neighbors of the current state without finding a better state.
-    # So we are safe skipping this state now. Then we shuffle by one,
-    # which is a shortcut, as a random swap is the only way out from
-    # here anyway.
-    #
-    # If we did select something, and it's a minimum, we want to avoid
-    # switching back and forth from each of its neighbors and itself
-    # until the neighbors are over.
-    board.skip()
 
     if temp and board.score == board.min_score:
       if board.score < absolute_min_score:
@@ -66,7 +61,6 @@ def search(board, absolute_min_score):
         print(board.score, "--", board.rel_score, "--", temp, "--", datetime.now())
         print("")
         absolute_min_score = board.score
-      board.save_dists()
       board.best_time = time()
 
     # Let's say that it is reasonable to consider ourselves stuck if we didn't find
