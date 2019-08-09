@@ -10,6 +10,7 @@ from nearness import Board
 def search(board):
   start = time()
   alpha = 0.9995
+  min_score_ever = math.inf
 
   temp = None
   init_steps = 0
@@ -55,9 +56,11 @@ def search(board):
 
     if temp and board.score == board.min_score:
       best_time = time()
-      print("")
-      print(board)
-      print(datetime.now(), board.score, "--", board.rel_score, "-- temp =", round(temp, 2), "-- time =", round(best_time - start, 2))
+      if board.score < min_score_ever:
+        min_score_ever = board.score
+        print("")
+        print(board)
+        print(datetime.now(), board.score, "--", board.rel_score, "-- temp =", round(temp, 2), "-- time =", round(best_time - start, 2))
 
     # Let's say that it is reasonable to consider ourselves stuck if we didn't find
     # any new better score within the time to do 30 "worst case steps".
@@ -66,8 +69,8 @@ def search(board):
       temp = None
       init_steps = 0
       increase = 0
-      board.skipped = set()
       best_time = math.inf
+      board.min_score = math.inf
 
 if __name__ == "__main__":
   try:
