@@ -8,12 +8,13 @@ from time import time
 from nearness import Board
 
 def search(board):
+  start = time()
   alpha = 0.9995
 
   temp = None
   init_steps = 0
   increase = 0
-  board.best_time = math.inf
+  best_time = math.inf
   while True:
     random.shuffle(board.all_pairs)
     selected = None
@@ -53,22 +54,21 @@ def search(board):
       board.shuffle(1)
 
     if temp and board.score == board.min_score:
-      print(board)
-      print(board.score, "--", board.rel_score, "--", temp, "--", datetime.now())
+      best_time = time()
       print("")
-      board.best_time = time()
+      print(board)
+      print(datetime.now(), board.score, "--", board.rel_score, "-- temp =", round(temp, 2), "-- time =", round(best_time - start, 2))
 
     # Let's say that it is reasonable to consider ourselves stuck if we didn't find
     # any new better score within the time to do 30 "worst case steps".
     # But wait at least 10 seconds.
-    if time() - board.best_time > max(10, 30 * len(board.all_pairs) * board.swap_time):
+    if time() - best_time > max(10, 30 * len(board.all_pairs) * board.swap_time):
       temp = None
       init_steps = 0
       increase = 0
-      board.best_time = math.inf
+      best_time = math.inf
 
 if __name__ == "__main__":
-  start = time()
   try:
     if len(sys.argv) != 2:
       print("Usage: python sa.py size")
@@ -79,7 +79,4 @@ if __name__ == "__main__":
     board = Board(size)
     search(board)
   except:
-    print("")
-    print("best found in:", int(board.best_time - start), "seconds")
-    print("total running time:", int(time() - start), "seconds")
     pass
