@@ -82,15 +82,17 @@ class Board(object):
     self.orig = self.initial_distances()
     self.grid = self.initial_grid()
 
-    self.min_dists = self.dists = np.array(self.orig)
+    self.dists = np.array(self.orig)
     self.scores = self.dists * self.orig
-    self.min_score = self.score = np.sum(self.scores) / 2 - BOUNDS[self.size]
+    self.score = np.sum(self.scores) / 2 - BOUNDS[self.size]
     self.rel_score = round(BEST_SCORES[self.size] / self.score, 4)
 
     self.skipped = set()
-    self.swap_count = 0
 
     self.all_pairs = list(itertools.combinations(((i, j) for i in range(size) for j in range(size)), 2))
+
+    self.min_score = self.score
+    self.swap_count = 0
 
   def initial_distances(self):
     m = np.zeros((self.size, self.size, self.size, self.size))

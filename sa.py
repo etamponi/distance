@@ -7,13 +7,13 @@ from time import time
 
 from nearness import Board
 
-def search(board, absolute_min_score):
-  board.best_time = math.inf
+def search(board):
   alpha = 0.9995
 
   temp = None
   init_steps = 0
   increase = 0
+  board.best_time = math.inf
   while True:
     random.shuffle(board.all_pairs)
     selected = None
@@ -44,30 +44,28 @@ def search(board, absolute_min_score):
     elif init_steps >= 1000:
       temp = - increase / (init_steps * math.log(0.5))
 
+    # Make sure we don't visit this state anymore
+    board.skip()
+
     if selected:
       board.swap(*selected)
     else:
-      # If we did not select anything, then we exhausted all possible
-      # neighbors of the current state without finding a better state.
-      # So we are safe skipping this state now. Then we shuffle by one,
-      # which is a shortcut, as a random swap is the only way out from
-      # here anyway.
-      board.skip()
       board.shuffle(1)
 
     if temp and board.score == board.min_score:
-      if board.score < absolute_min_score:
-        print(board)
-        print(board.score, "--", board.rel_score, "--", temp, "--", datetime.now())
-        print("")
-        absolute_min_score = board.score
+      print(board)
+      print(board.score, "--", board.rel_score, "--", temp, "--", datetime.now())
+      print("")
       board.best_time = time()
 
     # Let's say that it is reasonable to consider ourselves stuck if we didn't find
-    # any new better score within the time to do 30 "worst case steps"
-    # But wait at least 60 seconds
-    if time() - board.best_time > max(60, 30 * len(board.all_pairs) * board.swap_time):
-      return absolute_min_score
+    # any new better score within the time to do 30 "worst case steps".
+    # But wait at least 10 seconds.
+    if time() - board.best_time > max(10, 30 * len(board.all_pairs) * board.swap_time):
+      temp = None
+      init_steps = 0
+      increase = 0
+      board.best_time = math.inf
 
 if __name__ == "__main__":
   start = time()
@@ -78,11 +76,8 @@ if __name__ == "__main__":
 
     size = int(sys.argv[1])
 
-    # Reset search
-    absolute_min_score = math.inf
-    while True:
-      board = Board(size)
-      absolute_min_score = search(board, absolute_min_score)
+    board = Board(size)
+    search(board)
   except:
     print("")
     print("best found in:", int(board.best_time - start), "seconds")
