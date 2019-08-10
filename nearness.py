@@ -1,6 +1,8 @@
 import itertools
 import numpy as np
 import random
+
+from lru import LRU
 from time import time
 
 BOUNDS = [
@@ -87,7 +89,7 @@ class Board(object):
     self.score = np.sum(self.scores) / 2 - BOUNDS[self.size]
     self.rel_score = round(BEST_SCORES[self.size] / self.score, 4)
 
-    self.skipped = set()
+    self.skipped = LRU(1500000)
 
     self.all_pairs = list(itertools.combinations(((i, j) for i in range(size) for j in range(size)), 2))
 
@@ -165,7 +167,7 @@ class Board(object):
     return skip
 
   def skip(self):
-    self.skipped.add(tuple(itertools.chain(*self.grid)))
+    self.skipped[tuple(itertools.chain(*self.grid))] = True
 
   def shuffle(self, swap_num):
     while swap_num > 0:

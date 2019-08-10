@@ -12,6 +12,10 @@ def search(board):
   alpha = 0.9995
   min_score_ever = math.inf
 
+  num_pairs = len(board.all_pairs)
+  index = 0
+
+  random.shuffle(board.all_pairs)
   temp = None
   init_steps = 0
   increase = 0
@@ -19,9 +23,10 @@ def search(board):
   board.min_score = math.inf
   stuckness = 1
   while True:
-    random.shuffle(board.all_pairs)
     selected = None
-    for swap in board.all_pairs:
+    index %= num_pairs
+    for index in range(index, index + num_pairs):
+      swap = board.all_pairs[index % num_pairs]
       if board.peek_skipped(*swap):
         continue
 
@@ -56,18 +61,19 @@ def search(board):
     else:
       board.shuffle(1)
 
-    if temp and board.score == board.min_score:
+    if board.score == board.min_score:
       best_time = time()
       if board.score < min_score_ever:
         min_score_ever = board.score
         print("")
         print(board)
-        print(datetime.now(), board.score, "--", board.rel_score, "-- temp =", round(temp, 2), "-- time =", round(best_time - start, 2))
+        print(datetime.now(), board.score, "--", board.rel_score, "-- temp =", round(temp or 0, 2), "-- time =", round(best_time - start, 2))
 
     # Let's say that it is reasonable to consider ourselves stuck if we didn't find
     # any new better score within the time to do stuckness * 20 "worst case steps".
     # But wait at least 10 seconds.
-    if time() - best_time > max(10, stuckness * 20 * len(board.all_pairs) * board.swap_time):
+    if temp and time() - best_time > max(10, stuckness * 20 * len(board.all_pairs) * board.swap_time):
+      random.shuffle(board.all_pairs)
       temp = None
       init_steps = 0
       increase = 0
