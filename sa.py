@@ -1,4 +1,5 @@
 import math
+import os
 import random
 import sys
 
@@ -7,22 +8,28 @@ from time import time
 
 from nearness import Board
 
-def search(board):
-  start = time()
+def search(size):
+  board = Board(size)
   alpha = 0.9995
-  min_score_ever = math.inf
 
+  start = time()
   num_pairs = len(board.all_pairs)
   index = 0
-
-  random.shuffle(board.all_pairs)
-  temp = None
-  init_steps = 0
-  increase = 0
   best_time = math.inf
-  board.min_score = math.inf
-  stuckness = 1
+
+  temp = 0  
   while True:
+    if 'MEASURE' in os.environ and board.rel_score == 1:
+      return
+
+    if temp is not None and temp < 1:
+      init_temp = None
+      init_steps = 0
+      increase = 0
+      temp = None
+      step = 0
+      random.shuffle(board.all_pairs)
+
     selected = None
     index %= num_pairs
     for index in range(index, index + num_pairs):
@@ -48,11 +55,6 @@ def search(board):
         selected = swap
         break
 
-    if temp:
-      temp *= alpha
-    elif init_steps >= 1000:
-      temp = - increase / (init_steps * math.log(0.5))
-
     # Make sure we don't visit this state anymore
     board.skip()
 
@@ -61,25 +63,17 @@ def search(board):
     else:
       board.shuffle(1)
 
+    if temp:
+      step += 1
+      temp = init_temp * math.pow(alpha, step) * (1 + (board.score - board.min_score) / board.score)
+    elif init_steps >= 1000:
+      temp = init_temp = - increase / (init_steps * math.log(0.5))
+
     if board.score == board.min_score:
       best_time = time()
-      if board.score < min_score_ever:
-        min_score_ever = board.score
-        print("")
-        print(board)
-        print(datetime.now(), board.score, "--", board.rel_score, "-- temp =", round(temp or 0, 2), "-- time =", round(best_time - start, 2))
-
-    # Let's say that it is reasonable to consider ourselves stuck if we didn't find
-    # any new better score within the time to do stuckness * 20 "worst case steps".
-    # But wait at least 10 seconds.
-    if temp and time() - best_time > max(10, stuckness * 20 * len(board.all_pairs) * board.swap_time):
-      random.shuffle(board.all_pairs)
-      temp = None
-      init_steps = 0
-      increase = 0
-      best_time = math.inf
-      board.min_score = math.inf
-      stuckness += 1
+      print("")
+      print(board)
+      print(datetime.now(), board.score, "--", board.rel_score, "-- temp =", round(temp or 0, 2), "-- time =", round(best_time - start, 2))
 
 if __name__ == "__main__":
   try:
@@ -89,7 +83,6 @@ if __name__ == "__main__":
 
     size = int(sys.argv[1])
 
-    board = Board(size)
-    search(board)
+    search(size)
   except:
     pass
