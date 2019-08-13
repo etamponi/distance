@@ -8,27 +8,36 @@ from time import time
 
 from nearness import Board
 
-def search(size):
-  board = Board(size)
-  alpha = 0.9995
+# the probability that at least one element will be picked among n elements,
+# where p is the probability of picking one of them.
+def final_p(p, n):
+  return 1 - (1 - p)**(1 / n)
 
+def search(size, final_score=None, debug=None):
+  alpha = 0.9995
   start = time()
+
+  board = Board(size)
   num_pairs = len(board.all_pairs)
   index = 0
   run = 0
 
   temp = 0
+  final_temp = math.inf
   while True:
-    if 'MEASURE' in os.environ and board.rel_score == 1:
-      return
-
-    if temp is not None and (temp < 10):
-      init_temp = None
-      increase = 0
-      temp = None
-      step = 0
+    if temp is not None and (temp < final_temp):
       random.shuffle(board.all_pairs)
       run += 1
+
+      init_temp = None
+      final_temp = None
+      increases = []
+
+      temp = None
+      step = 0
+
+    if final_score and board.rel_score >= final_score:
+      return
 
     selected = None
     index %= num_pairs
@@ -46,7 +55,7 @@ def search(size):
 
       if not temp:
         # when initializing, accept all increases and log
-        increase += (peek_score - board.score)
+        increases.append(peek_score - board.score)
         step += 1
         selected = swap
         break
@@ -68,18 +77,22 @@ def search(size):
       step += 1
       temp = init_temp * math.pow(alpha, step) * (1 + (board.score - board.min_score) / board.score)
     elif step >= 1000:
-      temp = init_temp = - increase / (step * math.log(0.5))
+      avg_increase = sum(increases) / len(increases)
+      temp = init_temp = - avg_increase / math.log(0.5)
+      final_temp = - avg_increase / math.log(final_p(0.00005, num_pairs))
       step = 0
+      if debug:
+        print("\n\n\ninit_temp =", init_temp, "final_temp =", final_temp, "\n\n\n")
 
     if board.score == board.min_score:
       is_best = True
-
-    if is_best or step % 500 == 1:
       print("")
       print(board)
+
+    if is_best or (debug and step % 500 == 1):
       print(
         datetime.now(), board.score, "--", board.rel_score,
-        "-- temp =", round(temp or 0, 2),
+        "-- temp =", round(temp or -1, 2),
         "-- time =", round(time() - start, 2),
         "-- step =", step,
         "-- run =", run,
@@ -94,6 +107,10 @@ if __name__ == "__main__":
 
     size = int(sys.argv[1])
 
-    search(size)
+    if "MEASURE" in os.environ:
+      final_score = float(os.environ["MEASURE"])
+      search(size, final_score, debug=True)
+    else:
+      search(size, debug=True)
   except:
     pass
