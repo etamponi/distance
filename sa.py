@@ -55,7 +55,7 @@ def search(size, final_score=None, debug=None):
         selected = swap
         break
 
-      if not temp:
+      if not init_temp:
         # when initializing, accept all increases and log
         increases.append(peek_score - board.score)
         step += 1
@@ -75,10 +75,10 @@ def search(size, final_score=None, debug=None):
     else:
       board.shuffle(1)
 
-    if temp:
+    if init_temp:
       step += 1
       temp = init_temp * math.pow(alpha, step) * (1 + (board.score - board.min_score) / board.score)
-    elif step >= 1000:
+    elif len(increases) >= 1000:
       avg_increase = sum(increases) / len(increases)
       temp = init_temp = - avg_increase / math.log(0.5)
       final_temp = - avg_increase / math.log(final_p(final_picking_p, num_pairs))
