@@ -15,23 +15,24 @@ def search(size):
   start = time()
   num_pairs = len(board.all_pairs)
   index = 0
-  best_time = math.inf
+  run = 0
 
-  temp = 0  
+  temp = 0
   while True:
     if 'MEASURE' in os.environ and board.rel_score == 1:
       return
 
-    if temp is not None and temp < 1:
+    if temp is not None and (temp < 10):
       init_temp = None
-      init_steps = 0
       increase = 0
       temp = None
       step = 0
       random.shuffle(board.all_pairs)
+      run += 1
 
     selected = None
     index %= num_pairs
+    is_best = False
     for index in range(index, index + num_pairs):
       swap = board.all_pairs[index % num_pairs]
       if board.peek_skipped(*swap):
@@ -44,9 +45,9 @@ def search(size):
         break
 
       if not temp:
-        # accept all increases and log
+        # when initializing, accept all increases and log
         increase += (peek_score - board.score)
-        init_steps += 1
+        step += 1
         selected = swap
         break
 
@@ -66,14 +67,24 @@ def search(size):
     if temp:
       step += 1
       temp = init_temp * math.pow(alpha, step) * (1 + (board.score - board.min_score) / board.score)
-    elif init_steps >= 1000:
-      temp = init_temp = - increase / (init_steps * math.log(0.5))
+    elif step >= 1000:
+      temp = init_temp = - increase / (step * math.log(0.5))
+      step = 0
 
     if board.score == board.min_score:
-      best_time = time()
+      is_best = True
+
+    if is_best or step % 500 == 1:
       print("")
       print(board)
-      print(datetime.now(), board.score, "--", board.rel_score, "-- temp =", round(temp or 0, 2), "-- time =", round(best_time - start, 2))
+      print(
+        datetime.now(), board.score, "--", board.rel_score,
+        "-- temp =", round(temp or 0, 2),
+        "-- time =", round(time() - start, 2),
+        "-- step =", step,
+        "-- run =", run,
+        "BEST" if is_best else "",
+      )
 
 if __name__ == "__main__":
   try:
