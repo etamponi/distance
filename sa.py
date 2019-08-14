@@ -24,7 +24,6 @@ def search(size, final_score=None, debug=None):
 
   temp = 0
   final_temp = math.inf
-  final_picking_p = 0.0005
   while True:
     if temp is not None and (temp < final_temp):
       random.shuffle(board.all_pairs)
@@ -33,7 +32,6 @@ def search(size, final_score=None, debug=None):
       init_temp = None
       final_temp = None
       increases = []
-      final_picking_p *= 0.01
 
       temp = None
       step = 0
@@ -81,7 +79,8 @@ def search(size, final_score=None, debug=None):
     elif len(increases) >= 1000:
       avg_increase = sum(increases) / len(increases)
       temp = init_temp = - avg_increase / math.log(0.5)
-      final_temp = - avg_increase / math.log(final_p(final_picking_p, num_pairs))
+      # at every run , final_temp will get smaller
+      final_temp = - avg_increase / (run * math.log(final_p(0.00005, num_pairs)))
       step = 0
       if debug:
         print("\n\n\ninit_temp =", init_temp, "final_temp =", final_temp, "\n\n\n")
