@@ -14,13 +14,8 @@ status() {
   line=$(grep "BEST" $size.out | tail -n 1)
   date=$(echo $line | awk '{ print $2 }' | awk -F. '{ print $1 }')
   score=$(echo $line | awk '{ print $5 }')
-  if [ $size -lt 10 ]; then
-    echo -n "0$size: "
-  else
-    echo -n "$size: "
-  fi
 
-  echo -n $date $score
+  echo -n "$size: $date $score"
 
   if [ ! -z $dir ]; then
     cd $dir
@@ -36,7 +31,6 @@ status() {
   fi
 }
 
-for i in `seq 9 30`; do
+for i in `seq 11 30`; do
   status $i $1
 done
-
