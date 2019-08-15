@@ -86,8 +86,8 @@ def search(size, final_score=None, debug=None):
         keep_warm -= 1
     elif len(increases) >= 1000:
       avg_increase = sum(increases) / len(increases)
-      temp = init_temp = - avg_increase / math.log(0.5)
-      # at every run , final_temp will get smaller
+      # at every run, init_temp gets larger and final_temp gets smaller
+      temp = init_temp = - avg_increase / math.log(min(0.9, 0.5 + 0.02 * run))
       final_temp = - avg_increase / (run * math.log(final_p(0.00005, num_pairs)))
       step = 0
       if debug:
