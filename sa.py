@@ -25,6 +25,9 @@ def search(size, final_score=None, debug=None):
   temp = 0
   final_temp = math.inf
   while True:
+    if final_score and board.rel_score >= final_score:
+      return
+
     if temp is not None and (temp < final_temp):
       random.shuffle(board.all_pairs)
       run += 1
@@ -35,9 +38,6 @@ def search(size, final_score=None, debug=None):
 
       temp = None
       step = 0
-
-    if final_score and board.rel_score >= final_score:
-      return
 
     selected = None
     index %= num_pairs

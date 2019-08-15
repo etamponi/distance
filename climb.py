@@ -1,4 +1,5 @@
 import math
+import os
 import random
 import sys
 
@@ -7,25 +8,32 @@ from time import time
 
 from nearness import Board
 
-def search(board):
+def search(board, final_score=None):
+  start = time()
   # https://en.wikipedia.org/wiki/Rule_of_three_(statistics)
   # We want a 99.5% confidence level that the probability is 1e-4:
-  max_attempts = 5.3 * 1e4
+  max_attempts = int(5.3 * 1e4)
   # We are talking about the probability to find a lower score given
   # that we didn't find any in the first $max_attempts attempts.
 
-  min_score = board.score
+  num_pairs = len(board.all_pairs)
+  index = 0
 
+  random.shuffle(board.all_pairs)
   while True:
+    if final_score and board.rel_score >= final_score:
+      return
+
     next_swap = None
     next_score = board.score
 
     max_score = 0
     max_swap = None
 
-    random.shuffle(board.all_pairs)
     attempt = 0
-    for swap in board.all_pairs:
+    index %= num_pairs
+    for index in range(index, index + num_pairs):
+      swap = board.all_pairs[index % num_pairs]
       if board.peek_skipped(*swap):
         continue
 
@@ -51,15 +59,15 @@ def search(board):
     else:
       break
 
-    if board.score < min_score:
-      print(board)
-      print(board.score, "--", board.rel_score, "--", board.swap_count, "--", datetime.now())
+    if board.score == board.min_score:
       print("")
-      min_score = board.score
-      board.best_time = time()
+      print(board)
+      print(
+        datetime.now(), board.score, "--", board.rel_score,
+        "-- time =", round(time() - start, 2),
+      )
 
 if __name__ == "__main__":
-  start = time()
   try:
     if len(sys.argv) != 2:
       print("Usage: python climb.py size")
@@ -68,9 +76,10 @@ if __name__ == "__main__":
     size = int(sys.argv[1])
 
     board = Board(size)
-    search(board)
+    if "MEASURE" in os.environ:
+      final_score = float(os.environ["MEASURE"])
+      search(board, final_score)
+    else:
+      search(board)
   except:
-    print("")
-    print("best found in:", int(board.best_time - start), "seconds")
-    print("total running time:", int(time() - start), "seconds")
     pass
