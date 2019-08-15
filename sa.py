@@ -21,7 +21,10 @@ def search(size, final_score=None, debug=None):
   num_pairs = len(board.all_pairs)
   index = 0
   run = 0
+  keep_warm = 0
+  min_score_ever = math.inf
 
+  # set temp and final_temp in order to initialize the cycle at line 34
   temp = 0
   final_temp = math.inf
   while True:
@@ -38,6 +41,8 @@ def search(size, final_score=None, debug=None):
 
       temp = None
       step = 0
+
+      board.min_score = math.inf
 
     selected = None
     index %= num_pairs
@@ -75,7 +80,10 @@ def search(size, final_score=None, debug=None):
 
     if init_temp:
       step += 1
-      temp = init_temp * math.pow(alpha, step) * (1 + (board.score - board.min_score) / board.score)
+      if keep_warm <= 0:
+        temp = init_temp * math.pow(alpha, step) * (1 + (board.score - board.min_score) / board.score)
+      else:
+        keep_warm -= 1
     elif len(increases) >= 1000:
       avg_increase = sum(increases) / len(increases)
       temp = init_temp = - avg_increase / math.log(0.5)
@@ -86,15 +94,19 @@ def search(size, final_score=None, debug=None):
         print("\n\n\ninit_temp =", init_temp, "final_temp =", final_temp, "\n\n\n")
 
     if board.score == board.min_score:
-      is_best = True
-      print("")
-      print(board)
+      keep_warm = run * 100
+      if board.score < min_score_ever:
+        min_score_ever = board.score
+        is_best = True
+        print("")
+        print(board)
 
     if is_best or (debug and step % 500 == 1):
       print(
         datetime.now(), board.score, "--", board.rel_score,
-        "-- temp =", round(temp or -1, 2),
         "-- time =", round(time() - start, 2),
+        "-- temp =", round(temp or -1, 2),
+        "-- warm =", keep_warm,
         "-- step =", step,
         "-- run =", run,
         "BEST" if is_best else "",
