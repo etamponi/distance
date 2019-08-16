@@ -1,8 +1,8 @@
 import itertools
+import lru
 import numpy as np
 import random
 
-from lru import LRU
 from time import time
 
 BOUNDS = [
@@ -91,7 +91,7 @@ class Board:
     self.score = np.sum(self.scores) / 2 - BOUNDS[self.size]
     self.rel_score = round(BEST_SCORES[self.size] / self.score, 4)
 
-    self.skipped = LRU(1500000)
+    self.skipped = lru.LRU(1500000)
 
     self.all_pairs = list(itertools.combinations(((i, j) for i in range(size) for j in range(size)), 2))
 
