@@ -12,19 +12,19 @@ status() {
   size=$1
   dir=$2
   line=$(grep "BEST" $size.out | tail -n 1)
-  date=$(echo $line | awk '{ print $2 }' | awk -F. '{ print $1 }')
+  date=$(echo $line | awk '{ print $1, $2 }' | awk -F. '{ print $1 }')
   score=$(echo $line | awk '{ print $5 }')
 
-  echo -n "$size: $date $score"
+  echo -n "$size: $date  $score"
 
   if [ ! -z $dir ]; then
     cd $dir
-    prev_score=$(status $size | awk '{ print $3 }')
+    prev_score=$(status $size | awk '{ print $4 }')
     cd ..
     if (( $(echo "$score >= ${prev_score:0}" | bc -l) )); then
-      echo " $prev_score BETTER"
+      echo "  $prev_score BETTER"
     else
-      echo " $prev_score"
+      echo "  $prev_score"
     fi
   else
     echo ""
