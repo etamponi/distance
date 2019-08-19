@@ -1,4 +1,6 @@
+import itertools
 import numpy as np
+import random
 
 BOUNDS = [
   0,
@@ -37,13 +39,52 @@ BOUNDS = [
   5_643_997_650,
 ]
 
+BEST_SCORES = [
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+
+  5526,
+  17779,
+  57152,
+  144459,
+  362950,
+
+  740798,
+  1585264,
+  2888120,
+  5457848,
+  9164700,
+  15891088,
+  25152826,
+  40901354,
+  61784724,
+  95115180,
+
+  138133813,
+  203877974,
+  286970392,
+  409180212,
+  560367595,
+  776307056,
+  1039384551,
+  1404826716,
+  1843400528,
+  2439448486,
+]
+
 class Cell:
     # Original x, y coordinates
     def __init__(self, x, y):
         self.x, self.y = x, y
     
     def __repr__(self):
-        return "({:02d},{:02d})".format(self.x, self.y)
+        A = ord('A')
+        Z = ord('Z')
+        return "{}{}".format(*(chr(int(v) + A) if int(v) + A <= Z else int(v) + A - Z for v in (self.x, self.y)))
 
 class Board:
     def __init__(self, size):
@@ -60,11 +101,16 @@ class Board:
         self.score_xj = sum(sum(self.calc_score_xj(i, j) for i in range(size)) for j in range(size))
         self.score_yj = sum(sum(self.calc_score_yj(i, j) for i in range(size)) for j in range(size))
 
-        self.score = self.calc_score()
+        self.min_score = self.score = self.calc_score()
+        self.rel_score = round(BEST_SCORES[self.size] / self.score, 6)
+
+        self.all_pairs = list(itertools.combinations(((i, j) for i in range(size) for j in range(size)), 2))
+        self.swap_count = 0
     
     def __repr__(self):
-        return "\n".join(str(line) for line in self.cells)
+        return ",\n".join(["({})".format(", ".join([str(cell) for cell in row])) for row in self.cells])
 
+    # The following five methods don't need to be optimized for speed.
     # ONLY FOR TEST AND IN THE CONSTRUCTOR -- START
     def calc_dist(self, a, b):
         return min(abs(a - b), self.size - abs(a - b))**2
@@ -101,7 +147,8 @@ class Board:
     def calc_score(self):
         return (self.score_xi + self.score_xj + self.score_yi + self.score_yj) / 2 - BOUNDS[self.size]
 
-    def swap(self, i0, j0, i1, j1):
+    def swap(self, a, b):
+        (i0, j0), (i1, j1) = a, b
         self.score_xi -= 2*self.calc_score_xi(i0, j0)
         self.score_xi -= 2*self.calc_score_xi(i1, j1)
         self.score_yi -= 2*self.calc_score_yi(i0, j0)
@@ -139,6 +186,33 @@ class Board:
         self.score_yj += 2*self.calc_score_yj(i1, j1)
 
         self.score = self.calc_score()
+        self.rel_score = round(BEST_SCORES[self.size] / self.score, 6)
+        if self.score < self.min_score:
+            self.min_score = self.score
+        self.swap_count += 1
+
+        return self.score
+    
+    def peek_swap(self, a, b):
+        self.swap_count -= 2
+        peek_score = self.swap(a, b)
+        self.swap(a, b)
+        return peek_score
+
+    def shuffle(self, swap_num):
+        while swap_num > 0:
+            (a, b) = random.choice(self.all_pairs)
+            if not self.peek_skipped(a, b):
+                swap_num -= 1
+            self.swap(a, b)
+        return self.score
+
+    # no-op, at least for now, because they'd have O(n^2) complexity
+    def peek_skipped(self, a, b):
+        return False
+
+    def skip(self):
+        pass
 
 def matrix(m):
     return "\n".join(" ".join("{: 3d}".format(d) for d in line) for line in m)
@@ -146,12 +220,14 @@ def matrix(m):
 if __name__ == "__main__":
     board = Board(4)
 
-    board.swap(0, 1, 2, 3)
-    board.swap(3, 2, 1, 0)
-    board.swap(2, 1, 3, 0)
-    # board.swap(2, 1, 3, 0)
-    # board.swap(3, 2, 0, 1)
-    # board.swap(0, 1, 2, 3)
+    board.swap((0, 1), (2, 3))
+    board.swap((3, 2), (1, 0))
+    board.swap((2, 0), (3, 1))
+    # board.swap((2, 0), (3, 1))
+    # board.swap((3, 2), (1, 0))
+    # board.swap((0, 1), (2, 3))
+    print(board)
+    print("")
 
     print(board.score_xi, board.score_xj, board.score_yi, board.score_yj, board.score)
     print(sum(sum(board.calc_score_xi(i, j) for i in range(board.size)) for j in range(board.size)))

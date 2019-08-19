@@ -3,7 +3,7 @@ import sys
 
 from time import time
 
-from nearness import Board
+from on import Board
 
 def benchmark(size):
   board = Board(size)
@@ -27,6 +27,7 @@ def benchmark(size):
   print("PEEKED SCORE:", peek_score)
   assert(peek_score == initial_score)
 
+  """
   start = time()
   board.skip()
   print("SKIPPING TIME:", time() - start)
@@ -38,16 +39,17 @@ def benchmark(size):
   skip = board.peek_skipped((0, 2), (0, 0))
   print("SKIP CHECK TIME:", time() - start)
   assert(skip)
+  """
 
   start = time()
   random.shuffle(board.all_pairs)
   print("SHUFFLING ALL PAIRS:", time() - start)
 
   start = time()
-  for pair in board.all_pairs[:min(len(board.all_pairs), 1000)]:
-    board.peek_skipped(*pair)
-    board.peek_swap(*pair)
-    board.swap(*pair)
+  for (a, b) in board.all_pairs[:min(len(board.all_pairs), 1000)]:
+    board.peek_skipped(a, b)
+    board.peek_swap(a, b)
+    board.swap(a, b)
   print("PEEK UP AND SWAP UP TO 1000 TIMES TIME:", time() - start)
 
 if __name__ == "__main__":
