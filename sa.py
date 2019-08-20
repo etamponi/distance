@@ -1,4 +1,3 @@
-import lru
 import math
 import os
 import random
@@ -7,7 +6,7 @@ import sys
 from datetime import datetime
 from time import time
 
-from nearness import Board
+from on import Board
 
 # the probability that at least one element will be picked among n elements,
 # where p is the probability of picking one of them.
@@ -48,7 +47,7 @@ def search(size, final_score=None, debug=None):
     selected = None
     index %= num_pairs
     is_best = False
-    for index in range(index, index + num_pairs):
+    for index in range(index + 1, index + num_pairs):
       swap = board.all_pairs[index % num_pairs]
       if board.peek_skipped(*swap):
         continue
@@ -116,7 +115,7 @@ def search(size, final_score=None, debug=None):
 if __name__ == "__main__":
   try:
     if len(sys.argv) != 2:
-      print("Usage: python sa.py size")
+      print("Usage: pypy3 sa.py size")
       exit()
 
     size = int(sys.argv[1])

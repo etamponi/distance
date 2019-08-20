@@ -1,5 +1,4 @@
 import itertools
-import numpy as np
 import random
 
 BOUNDS = [
@@ -90,11 +89,11 @@ class Board:
     def __init__(self, size):
         self.size = size
         self.cells = [ [ Cell(i, j) for j in range(size) ] for i in range(size) ]
-        self.dist = np.array([ [self.calc_dist(i0, i) for i in range(size) ] for i0 in range(size) ])
-        self.sum_dist_xi = np.array([ [self.calc_sum_dist_xi(x_i0_j0, i) for i in range(size)] for x_i0_j0 in range(size) ])
-        self.sum_dist_yi = np.array([ [self.calc_sum_dist_yi(y_i0_j0, i) for i in range(size)] for y_i0_j0 in range(size) ])
-        self.sum_dist_xj = np.array([ [self.calc_sum_dist_xj(x_i0_j0, j) for j in range(size)] for x_i0_j0 in range(size) ])
-        self.sum_dist_yj = np.array([ [self.calc_sum_dist_yj(y_i0_j0, j) for j in range(size)] for y_i0_j0 in range(size) ])
+        self.dist = [ [self.calc_dist(i0, i) for i in range(size) ] for i0 in range(size) ]
+        self.sum_dist_xi = [ [self.calc_sum_dist_xi(x_i0_j0, i) for i in range(size)] for x_i0_j0 in range(size) ]
+        self.sum_dist_yi = [ [self.calc_sum_dist_yi(y_i0_j0, i) for i in range(size)] for y_i0_j0 in range(size) ]
+        self.sum_dist_xj = [ [self.calc_sum_dist_xj(x_i0_j0, j) for j in range(size)] for x_i0_j0 in range(size) ]
+        self.sum_dist_yj = [ [self.calc_sum_dist_yj(y_i0_j0, j) for j in range(size)] for y_i0_j0 in range(size) ]
 
         self.score_xi = sum(sum(self.calc_score_xi(i, j) for i in range(size)) for j in range(size))
         self.score_yi = sum(sum(self.calc_score_yi(i, j) for i in range(size)) for j in range(size))
@@ -106,6 +105,9 @@ class Board:
 
         self.all_pairs = list(itertools.combinations(((i, j) for i in range(size) for j in range(size)), 2))
         self.swap_count = 0
+
+        self.last_swap = None
+        self.skip_at_next_swap = False
     
     def __repr__(self):
         return ",\n".join(["({})".format(", ".join([str(cell) for cell in row])) for row in self.cells])
@@ -130,19 +132,19 @@ class Board:
 
     def calc_score_xi(self, i0, j0):
         x_i0_j0 = self.cells[i0][j0].x
-        return np.sum(self.dist[i0, :] * self.sum_dist_xi[x_i0_j0, :])
+        return sum(self.dist[i0][i] * self.sum_dist_xi[x_i0_j0][i] for i in range(self.size))
 
     def calc_score_yi(self, i0, j0):
         y_i0_j0 = self.cells[i0][j0].y
-        return np.sum(self.dist[i0, :] * self.sum_dist_yi[y_i0_j0, :])
+        return sum(self.dist[i0][i] * self.sum_dist_yi[y_i0_j0][i] for i in range(self.size))
 
     def calc_score_xj(self, i0, j0):
         x_i0_j0 = self.cells[i0][j0].x
-        return np.sum(self.dist[j0, :] * self.sum_dist_xj[x_i0_j0, :])
+        return sum(self.dist[j0][j] * self.sum_dist_xj[x_i0_j0][j] for j in range(self.size))
 
     def calc_score_yj(self, i0, j0):
         y_i0_j0 = self.cells[i0][j0].y
-        return np.sum(self.dist[j0, :] * self.sum_dist_yj[y_i0_j0, :])
+        return sum(self.dist[j0][j] * self.sum_dist_yj[y_i0_j0][j] for j in range(self.size))
 
     def calc_score(self):
         return (self.score_xi + self.score_xj + self.score_yi + self.score_yj) / 2 - BOUNDS[self.size]
@@ -160,19 +162,21 @@ class Board:
 
         x0, x1 = self.cells[i0][j0].x, self.cells[i1][j1].x
         if x0 != x1:
-            self.sum_dist_xi[:, i0] += self.dist[:, x1] - self.dist[:, x0]
-            self.sum_dist_xi[:, i1] += self.dist[:, x0] - self.dist[:, x1]
+            for x in range(self.size):
+                self.sum_dist_xi[x][i0] += self.dist[x][x1] - self.dist[x][x0]
+                self.sum_dist_xi[x][i1] += self.dist[x][x0] - self.dist[x][x1]
 
-            self.sum_dist_xj[:, j0] += self.dist[:, x1] - self.dist[:, x0]
-            self.sum_dist_xj[:, j1] += self.dist[:, x0] - self.dist[:, x1]
+                self.sum_dist_xj[x][j0] += self.dist[x][x1] - self.dist[x][x0]
+                self.sum_dist_xj[x][j1] += self.dist[x][x0] - self.dist[x][x1]
 
         y0, y1 = self.cells[i0][j0].y, self.cells[i1][j1].y
         if y0 != y1:
-            self.sum_dist_yi[:, i0] += self.dist[:, y1] - self.dist[:, y0]
-            self.sum_dist_yi[:, i1] += self.dist[:, y0] - self.dist[:, y1]
+            for y in range(self.size):
+                self.sum_dist_yi[y][i0] += self.dist[y][y1] - self.dist[y][y0]
+                self.sum_dist_yi[y][i1] += self.dist[y][y0] - self.dist[y][y1]
 
-            self.sum_dist_yj[:, j0] += self.dist[:, y1] - self.dist[:, y0]
-            self.sum_dist_yj[:, j1] += self.dist[:, y0] - self.dist[:, y1]
+                self.sum_dist_yj[y][j0] += self.dist[y][y1] - self.dist[y][y0]
+                self.sum_dist_yj[y][j1] += self.dist[y][y0] - self.dist[y][y1]
 
         self.cells[i0][j0], self.cells[i1][j1] = self.cells[i1][j1], self.cells[i0][j0]
 
@@ -190,6 +194,9 @@ class Board:
         if self.score < self.min_score:
             self.min_score = self.score
         self.swap_count += 1
+        if self.skip_at_next_swap:
+            self.last_swap = (a, b)
+            self.skip_at_next_swap = False
 
         return self.score
     
@@ -207,12 +214,12 @@ class Board:
             self.swap(a, b)
         return self.score
 
-    # no-op, at least for now, because they'd have O(n^2) complexity
     def peek_skipped(self, a, b):
-        return False
+        return self.last_swap == (a, b)
 
     def skip(self):
-        pass
+        # Prepare to skip this state after next swap
+        self.skip_at_next_swap = True
 
 def matrix(m):
     return "\n".join(" ".join("{: 3d}".format(d) for d in line) for line in m)

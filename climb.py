@@ -6,7 +6,7 @@ import sys
 from datetime import datetime
 from time import time
 
-from nearness import Board
+from on import Board
 
 def search(board, final_score=None):
   start = time()
@@ -70,7 +70,7 @@ def search(board, final_score=None):
 if __name__ == "__main__":
   try:
     if len(sys.argv) != 2:
-      print("Usage: python climb.py size")
+      print("Usage: pypy3 climb.py size")
       exit()
 
     size = int(sys.argv[1])
