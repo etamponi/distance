@@ -94,7 +94,7 @@ def search(size, final_score=None, debug=None):
         print("\n\n\ninit_temp =", init_temp, "final_temp =", final_temp, "\n\n\n")
 
     if board.score == board.min_score:
-      keep_warm = run * 100
+      keep_warm = 1000
       if board.score < min_score_ever:
         min_score_ever = board.score
         is_best = True
