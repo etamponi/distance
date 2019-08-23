@@ -106,8 +106,7 @@ class Board:
         self.all_pairs = list(itertools.combinations(((i, j) for i in range(size) for j in range(size)), 2))
         self.swap_count = 0
 
-        self.last_swap = None
-        self.skip_at_next_swap = False
+        self.skipped = set()
     
     def __repr__(self):
         return ",\n".join(["({})".format(", ".join([str(cell) for cell in row])) for row in self.cells])
@@ -194,9 +193,6 @@ class Board:
         if self.score < self.min_score:
             self.min_score = self.score
         self.swap_count += 1
-        if self.skip_at_next_swap:
-            self.last_swap = (a, b)
-            self.skip_at_next_swap = False
 
         return self.score
     
@@ -214,12 +210,18 @@ class Board:
             self.swap(a, b)
         return self.score
 
+    # peek_skipped and skip are O(n^2) :(
     def peek_skipped(self, a, b):
-        return self.last_swap == (a, b)
+        (i0, j0), (i1, j1) = a, b
+        self.cells[i0][j0], self.cells[i1][j1] = self.cells[i1][j1], self.cells[i0][j0]
+        config = tuple((cell.x, cell.y) for cell in itertools.chain(*self.cells))
+        skip = config in self.skipped
+        self.cells[i0][j0], self.cells[i1][j1] = self.cells[i1][j1], self.cells[i0][j0]
+        return skip
 
     def skip(self):
-        # Prepare to skip this state after next swap
-        self.skip_at_next_swap = True
+        config = tuple((cell.x, cell.y) for cell in itertools.chain(*self.cells))
+        self.skipped.add(config)
 
 def matrix(m):
     return "\n".join(" ".join("{: 3d}".format(d) for d in line) for line in m)
